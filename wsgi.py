@@ -104,7 +104,17 @@ def checkout(request, req_settings):
     return True
 
 def set_env(req_settings):
-    os.environ["DEPLOY_DIR"] = os.path.expanduser(req_settings["deploy_dir"])
+    for key, val in req_settings.items():
+        if key.lower() == "github_secret":
+            continue
+
+        good_key = key.replace(" ", "_").upper()
+        good_val = str(val)
+
+        if good_val.lower().endswith("_dir"):
+            good_val = os.path.expanduser(good_val)
+
+        os.environ["WEBHOOK_%s" % good_key] = good_val
 
 def build(req_settings):
     checkout_dir = get_checkout_dir(req_settings)

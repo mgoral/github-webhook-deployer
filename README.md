@@ -32,10 +32,6 @@ webhook_settings = {
         #
         "prod_branch" : "master",
 
-        # directory to which application should be deployed
-        #
-        "deploy_dir" : "/var/www/example.com/my-super-app/html",
-
         # http address of git repository
         #
         "git_http_address" : "https://github.com/username/some-application.git",
@@ -47,10 +43,34 @@ webhook_settings = {
 }
 ```
 
+If any field ends with a `_dir`, it will be expanded to the full path (so it can be e.g.
+`~/some/dir/in/home`).
+
 # Makefile
 
-Some extra environment variables are available in your Makefiles:
+For each of your applications all settings, except `github_secret`, are exported as upper-case-named
+environment variables with a `WEBHOOK_` prefix, so they can be easily accessed in from Makefile.
 
 ```
-$(DEPLOY_DIR) : equals to webhook_settings["username/app"]["deploy_dir"]
+# settings.py:
+
+enable_debug = True
+
+webhook_settings = {
+    "user/app" : {
+        "prod_branch" : "master",           # available as $(WEBHOOK_PROD_BRANCH)
+        "github_secret" : "asdfasd",        # not available
+        "deploy_dir" : "~/app_deployment",  # $(WEBHOOK_DEPLOY_DIR) is e.g.  /home/www-data/app_deployment
+        "build dir" : "build"               # $(WEBHOOK_BUILD_DIR)
+    }
+}
+
+# Makefile:
+
+all:
+    mkdir $(WEBHOOK_BUILD_DIR)
+    echo "Hello!" > $(WEBHOOK_BUILD_DIR)/index.html
+
+deploy:
+    cp -rf $(WEBHOOK_BUILD_DIR) $(WEBHOOK_DEPLOY_DIR)
 ```
