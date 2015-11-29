@@ -117,7 +117,7 @@ def set_env(req_settings):
         good_val = str(val)
 
         if good_val.lower().endswith("_dir"):
-            good_val = os.path.expanduser(good_val)
+            good_val = os.path.abspath(os.path.expanduser(good_val))
 
         os.environ["WEBHOOK_%s" % good_key] = good_val
 
