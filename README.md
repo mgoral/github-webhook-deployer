@@ -34,7 +34,7 @@ webhook_settings = {
 
         # http address of git repository
         #
-        "git_http_address" : "https://github.com/username/some-application.git",
+        "git_address" : "https://github.com/username/some-application.git",
 
         # optional 'secret' field, as specified in webhook settings
         #

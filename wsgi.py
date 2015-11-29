@@ -78,7 +78,12 @@ def get_checkout_dir(req_settings):
     return os.path.join(main_checkout_dir, req_settings["full_name"])
 
 def checkout(request, req_settings):
-    if request.get("repository", dict()).get("clone_url") != req_settings["git_http_address"]:
+    if req_settings["git_address"].startswith("http"):
+        compare_addr = request.get("repository", dict()).get("clone_url")
+    else:
+        compare_addr = request.get("repository", dict()).get("ssh_url")
+
+    if compare_addr != req_settings["git_address"]:
         raise ValueError("requested repository mismatch")
 
     if request.get("ref") != "refs/heads/%s" % req_settings["prod_branch"]:
@@ -89,7 +94,7 @@ def checkout(request, req_settings):
     try:
         repo = git.Repo(checkout_dir)
     except (git.exc.InvalidGitRepositoryError, git.exc.NoSuchPathError) as e:
-        repo = git.Repo.clone_from(req_settings["git_http_address"], checkout_dir)
+        repo = git.Repo.clone_from(req_settings["git_address"], checkout_dir)
 
     g = git.cmd.Git(checkout_dir)
     g.clean(f=True, d=True)
@@ -148,9 +153,6 @@ def application(environ, start_response):
         return return_body("server-side webhook not configured for '%s'" % full_name)
     else:
         req_settings["full_name"] = full_name
-
-    assert(get_checkout_dir(req_settings).startswith(os.path.expanduser(req_settings["deploy_dir"])) is False)
-    assert(os.path.expanduser(req_settings["deploy_dir"]).startswith(get_checkout_dir(req_settings)) is False)
 
     if "github_secret" in req_settings and validate_request(environ.get("HTTP_X_HUB_SIGNATURE"), payload, req_settings) is False:
         start_response('400 Bad Request', [('Content-Type', 'text/html')])
