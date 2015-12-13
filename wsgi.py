@@ -32,7 +32,7 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 main_checkout_dir = os.path.join(script_dir, ".site-sources")
 
 def call(cmd):
-    return subprocess.check_call(cmd, shell=True)
+    return subprocess.check_call(cmd.split())
 
 def validate_request(signature, payload, req_settings):
     if signature is None:
@@ -123,11 +123,13 @@ def set_env(req_settings):
 
 def build(req_settings):
     checkout_dir = get_checkout_dir(req_settings)
-    call("cd '%s' && make" % checkout_dir)
+    os.chdir(checkout_dir)
+    call("make")
 
 def deploy(req_settings):
     checkout_dir = get_checkout_dir(req_settings)
-    call("cd %s && make deploy" % checkout_dir)
+    os.chdir(checkout_dir)
+    call("make deploy")
 
 def application(environ, start_response):
     try:
